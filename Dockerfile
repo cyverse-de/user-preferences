@@ -1,13 +1,10 @@
-FROM jeanblanchard/alpine-glibc
-
-ADD user-preferences /bin/user-preferences
+FROM golang:1.6-alpine
 
 ARG git_commit=unknown
-ARG buildenv_git_commit=unknown
-ARG version=unknown
-LABEL org.iplantc.de.user-preferences.git-ref="$git_commit" \
-      org.iplantc.de.user-preferences.version="$version" \
-      org.iplantc.de.buildenv.git-ref="$buildenv_git_commit"
+LABEL org.cyverse.git-ref="$git_commit"
+
+COPY . /go/src/github.com/cyverse-de/user-preferences
+RUN go install github.com/cyverse-de/user-preferences
 
 EXPOSE 60000
 ENTRYPOINT ["user-preferences"]
