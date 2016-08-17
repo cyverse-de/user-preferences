@@ -15,7 +15,6 @@ import (
 	"github.com/cyverse-de/dbutil"
 	"github.com/cyverse-de/logcabin"
 	"github.com/cyverse-de/queries"
-	"github.com/cyverse-de/version"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/olebedev/config"
@@ -416,6 +415,25 @@ func fixAddr(addr string) string {
 	return addr
 }
 
+var (
+	gitref  string
+	appver  string
+	builtby string
+)
+
+// AppVersion prints the version information to stdout
+func AppVersion() {
+	if appver != "" {
+		fmt.Printf("App-Version: %s\n", appver)
+	}
+	if gitref != "" {
+		fmt.Printf("Git-Ref: %s\n", gitref)
+	}
+	if builtby != "" {
+		fmt.Printf("Built-By: %s\n", builtby)
+	}
+}
+
 func main() {
 	var (
 		showVersion = flag.Bool("version", false, "Print the version information")
@@ -428,7 +446,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		version.AppVersion()
+		AppVersion()
 		os.Exit(0)
 	}
 
