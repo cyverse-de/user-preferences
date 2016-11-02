@@ -2,6 +2,14 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/DATA-DOG/go-sqlmock",
+			"repository": "https://github.com/DATA-DOG/go-sqlmock",
+			"vcs": "git",
+			"revision": "d4cd2ca2ad1cc2130bba385aab072218f131f636",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/armon/consul-api",
 			"repository": "https://github.com/armon/consul-api",
 			"vcs": "git",
@@ -87,6 +95,14 @@
 			"repository": "https://github.com/hashicorp/hcl",
 			"vcs": "git",
 			"revision": "baeb59c710717b06aac1dbe2270e8192ec593244",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/kisielk/sqlstruct",
+			"repository": "https://github.com/kisielk/sqlstruct",
+			"vcs": "git",
+			"revision": "648daed35d49dac24a4bff253b190a80da3ab6a5",
 			"branch": "master",
 			"notests": true
 		},
