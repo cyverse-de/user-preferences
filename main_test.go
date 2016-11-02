@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 )
 
 type MockDB struct {
@@ -495,5 +497,188 @@ func TestDeleteUnstored(t *testing.T) {
 
 	if actualStatus != expectedStatus {
 		t.Errorf("DELETE status code was %d instead of %d", actualStatus, expectedStatus)
+	}
+}
+
+func TestNewPrefsDB(t *testing.T) {
+	db, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error occurred creating the mock db: %s", err)
+	}
+	defer db.Close()
+
+	prefs := NewPrefsDB(db)
+	if prefs == nil {
+		t.Error("NewPrefsDB() returned nil")
+	}
+
+	if prefs.db != db {
+		t.Error("dbs did not match")
+	}
+}
+
+func TestIsUser(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating the mock db: %s", err)
+	}
+	defer db.Close()
+
+	p := NewPrefsDB(db)
+	if p == nil {
+		t.Error("NewPrefsDB returned nil")
+	}
+
+	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM \\( SELECT DISTINCT id FROM users").
+		WithArgs("test-user").
+		WillReturnRows(sqlmock.NewRows([]string{"check_user"}).AddRow(1))
+
+	present, err := p.isUser("test-user")
+	if err != nil {
+		t.Errorf("error calling isUser(): %s", err)
+	}
+
+	if !present {
+		t.Error("test-user was not found")
+	}
+}
+
+func TestHasPreferences(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating the mock db: %s", err)
+	}
+	defer db.Close()
+
+	p := NewPrefsDB(db)
+	if p == nil {
+		t.Error("NewPrefsDB returned nil")
+	}
+
+	mock.ExpectQuery("SELECT COUNT\\(p.\\*\\) FROM user_preferences p, users u WHERE p.user_id = u.id").
+		WithArgs("test-user").
+		WillReturnRows(sqlmock.NewRows([]string{""}).AddRow("1"))
+
+	hasPrefs, err := p.hasPreferences("test-user")
+	if err != nil {
+		t.Errorf("error from hasPreferences(): %s", err)
+	}
+
+	if !hasPrefs {
+		t.Error("hasPreferences() returned false")
+	}
+}
+
+func TestGetPreferences(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating the mock db: %s", err)
+	}
+	defer db.Close()
+
+	p := NewPrefsDB(db)
+	if p == nil {
+		t.Error("NewPrefsDB returned nil")
+	}
+
+	mock.ExpectQuery("SELECT p.id AS id, p.user_id AS user_id, p.preferences AS preferences FROM user_preferences p, users u WHERE p.user_id = u.id AND u.username =").
+		WithArgs("test-user").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "preferences"}).AddRow("1", "2", "{}"))
+
+	records, err := p.getPreferences("test-user")
+	if err != nil {
+		t.Errorf("error from getPreferences(): %s", err)
+	}
+
+	if len(records) != 1 {
+		t.Errorf("number of records returned was %d instead of 1", len(records))
+	}
+
+	prefs := records[0]
+	if prefs.UserID != "2" {
+		t.Errorf("user id was %s instead of 2", prefs.UserID)
+	}
+
+	if prefs.ID != "1" {
+		t.Errorf("id was %s instead of 1", prefs.ID)
+	}
+
+	if prefs.Preferences != "{}" {
+		t.Errorf("preferences was %s instead of '{}'", prefs.Preferences)
+	}
+}
+
+func TestInsertPreferences(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating the mock db: %s", err)
+	}
+	defer db.Close()
+
+	p := NewPrefsDB(db)
+	if p == nil {
+		t.Error("NewPrefsDB returned nil")
+	}
+
+	mock.ExpectQuery("SELECT id FROM users WHERE username =").
+		WithArgs("test-user").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("1"))
+
+	mock.ExpectExec("INSERT INTO user_preferences \\(user_id, preferences\\) VALUES").
+		WithArgs("1", "{}").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	if err = p.insertPreferences("test-user", "{}"); err != nil {
+		t.Errorf("error inserting preferences: %s", err)
+	}
+}
+
+func TestUpdatePreferences(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating the mock db: %s", err)
+	}
+	defer db.Close()
+
+	p := NewPrefsDB(db)
+	if p == nil {
+		t.Error("NewPrefsDB returned nil")
+	}
+
+	mock.ExpectQuery("SELECT id FROM users WHERE username =").
+		WithArgs("test-user").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("1"))
+
+	mock.ExpectExec("UPDATE ONLY user_preferences SET preferences =").
+		WithArgs("1", "{}").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	if err = p.updatePreferences("test-user", "{}"); err != nil {
+		t.Errorf("error updating preferences: %s", err)
+	}
+}
+
+func TestDeletePreferences(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating the mock db: %s", err)
+	}
+	defer db.Close()
+
+	p := NewPrefsDB(db)
+	if p == nil {
+		t.Error("NewPrefsDB returned nil")
+	}
+
+	mock.ExpectQuery("SELECT id FROM users WHERE username =").
+		WithArgs("test-user").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("1"))
+
+	mock.ExpectExec("DELETE FROM ONLY user_preferences WHERE user_id =").
+		WithArgs("1").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	if err = p.deletePreferences("test-user"); err != nil {
+		t.Errorf("error deleting preferences: %s", err)
 	}
 }
