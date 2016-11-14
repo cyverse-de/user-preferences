@@ -541,6 +541,10 @@ func TestIsUser(t *testing.T) {
 	if !present {
 		t.Error("test-user was not found")
 	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met: %s", err)
+	}
 }
 
 func TestHasPreferences(t *testing.T) {
@@ -566,6 +570,10 @@ func TestHasPreferences(t *testing.T) {
 
 	if !hasPrefs {
 		t.Error("hasPreferences() returned false")
+	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met: %s", err)
 	}
 }
 
@@ -606,6 +614,10 @@ func TestGetPreferences(t *testing.T) {
 	if prefs.Preferences != "{}" {
 		t.Errorf("preferences was %s instead of '{}'", prefs.Preferences)
 	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met: %s", err)
+	}
 }
 
 func TestInsertPreferences(t *testing.T) {
@@ -630,6 +642,10 @@ func TestInsertPreferences(t *testing.T) {
 
 	if err = p.insertPreferences("test-user", "{}"); err != nil {
 		t.Errorf("error inserting preferences: %s", err)
+	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met: %s", err)
 	}
 }
 
@@ -656,6 +672,10 @@ func TestUpdatePreferences(t *testing.T) {
 	if err = p.updatePreferences("test-user", "{}"); err != nil {
 		t.Errorf("error updating preferences: %s", err)
 	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met: %s", err)
+	}
 }
 
 func TestDeletePreferences(t *testing.T) {
@@ -680,5 +700,9 @@ func TestDeletePreferences(t *testing.T) {
 
 	if err = p.deletePreferences("test-user"); err != nil {
 		t.Errorf("error deleting preferences: %s", err)
+	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met: %s", err)
 	}
 }
